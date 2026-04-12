@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Ойыны</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <div id="auth-section" class="card">
+            <h2>Қош келдіңіз!</h2>
+            <p>Жарысты бастау үшін жүйеге кіріңіз</p>
+            <input type="email" id="email" placeholder="Email (мысалы: test@mail.com)">
+            <button onclick="signInWithEmail()" id="login-btn">Email арқылы кіру</button>
+            <div id="auth-status"></div>
+        </div>
+
+        <div id="quiz-selection" class="card" style="display: none;">
+            <h2>Нұсқаны таңдаңыз</h2>
+            <div class="grid-container" id="variant-grid">
+                </div>
+            <button onclick="signOut()" class="logout-btn">Шығу</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
