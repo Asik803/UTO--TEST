@@ -103,3 +103,13 @@ function setTheme(theme) {
         event.currentTarget.classList.add('active');
     }
 }
+
+async function signInWithGoogle() {
+    // Егер басында '_supabase' болса, осы жерде де солай болуы тиіс
+    const { data, error } = await _supabase.auth.signInWithOAuth({ 
+        provider: 'google',
+        options: {
+            redirectTo: window.location.origin
+        }
+    });
+}
