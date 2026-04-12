@@ -3,27 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тест Ойыны</title>
+    <title>Платформа</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div class="container">
-        <div id="auth-section" class="card">
-            <h2>Қош келдіңіз!</h2>
-            <p>Жарысты бастау үшін жүйеге кіріңіз</p>
-            <input type="email" id="email" placeholder="Email (мысалы: test@mail.com)">
-            <button onclick="signInWithEmail()" id="login-btn">Email арқылы кіру</button>
-            <div id="auth-status"></div>
-        </div>
-
-        <div id="quiz-selection" class="card" style="display: none;">
-            <h2>Нұсқаны таңдаңыз</h2>
-            <div class="grid-container" id="variant-grid">
+    <div id="auth-section" class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h2 id="auth-title">Тіркелу</h2>
+                <div class="auth-form">
+                    <input type="text" id="username" placeholder="Никнейм" class="main-input">
+                    <input type="email" id="email" placeholder="Email" class="main-input">
+                    <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="Құпия сөз" class="main-input">
+                        <button class="eye-btn" onclick="togglePass()">👁️</button>
+                    </div>
+                    <button onclick="handleAuth()" id="auth-btn" class="primary-btn">Тіркелу</button>
+                    
+                    <div class="auth-switch-box">
+                        <p onclick="toggleAuthMode()" id="toggle-link">Аккаунтыңыз бар ма? <span>Кіру</span></p>
+                    </div>
                 </div>
-            <button onclick="signOut()" class="logout-btn">Шығу</button>
+            </div>
         </div>
+    </div>
+
+    <div id="quiz-selection" class="app-layout" style="display: none;">
+        <aside class="sidebar">
+            <div class="sidebar-user">
+                <div class="user-avatar-container">
+                    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" id="side-avatar">
+                </div>
+                <div id="user-name-display" class="user-name">Пайдаланушы</div>
+            </div>
+            <nav class="side-menu">
+                <button onclick="showView('news')" class="menu-item active" id="btn-news">📰 Жаңалықтар</button>
+                <button onclick="showView('variants')" class="menu-item" id="btn-variants">📚 Нұсқалар</button>
+                <button onclick="showView('profile')" class="menu-item" id="btn-profile">👤 Профиль</button>
+                <button onclick="showView('settings')" class="menu-item" id="btn-settings">⚙️ Баптаулар</button>
+            </nav>
+            <button onclick="signOut()" class="logout-btn">Шығу</button>
+        </aside>
+
+        <main class="main-content">
+            <section id="view-news" class="content-view">
+                <div class="welcome-box">
+                    <h1>Қош келдіңіз! 👋</h1>
+                    <p class="motivation-text">"Білімді болу – тереңінен су ішкенмен тең. Оқудан ешқашан жалықпа."</p>
+        
+                    <div class="news-divider"></div> <div class="news-status">
+                        <span class="badge">Жаңа</span>
+                        <p>Интерфейс пен функционал толықтай жаңартылды. Барлық бөлімдер реттелді.</p>
+                    </div>
+
+                    <div class="news-divider"></div> <div class="news-status">
+                        <span class="badge">Жаңа</span>
+                        <p>Жақын арада нұсқалар салынатын болады.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-variants" class="content-view" style="display: none;">
+                <div class="variants-header-box">
+                    <h2 class="view-title">📚 Оқу нұсқалары</h2>
+                </div>
+    
+                <div class="variants-grid" id="variant-grid">
+                </div>
+            </section>
+
+            <section id="view-profile" class="content-view" style="display: none;">
+                <div class="header-box">
+                    <h2 class="view-title">👤 Менің профилім</h2>
+                </div>
+                <div class="profile-card card-rounded"> <div class="profile-flex">
+                        <div class="profile-left">
+                            <div class="big-avatar">
+                                <img src="" id="edit-avatar-preview">
+                            </div>
+                            <h3 id="profile-nick-display">Nick</h3>
+                        </div>
+                        <div class="profile-right">
+                            <label>Никнейм</label>
+                            <input type="text" id="edit-username" class="main-input">
+                            <label>Аватар URL</label>
+                            <input type="text" id="avatar-url-input" class="main-input">
+                            <label>Email</label>
+                            <input type="text" id="profile-email" disabled class="main-input disabled">
+                            <button onclick="updateProfile()" class="primary-btn">Сақтау</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-settings" class="content-view" style="display: none;">
+                <div class="header-box">
+                    <h2 class="view-title">⚙️ Баптаулар</h2>
+                </div>
+                <div class="settings-card card-rounded"> <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Түнгі режим</h4>
+                            <p>Интерфейс түсін ауыстыру</p>
+                        </div>
+                        <div class="theme-switch">
+                            <button onclick="setTheme('dark')" class="theme-btn active">🌙</button>
+                            <button onclick="setTheme('light')" class="theme-btn">☀️</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
     <script src="app.js"></script>
