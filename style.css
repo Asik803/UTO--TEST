@@ -80,14 +80,29 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-color)
 /* SIDEBAR стилін айнымалыға байлау */
 .sidebar {
     width: 260px;
-    height: 100vh;
+    height: 100vh; /* Мәзір толық экран биіктігін алуы керек */
     background-color: var(--sidebar-bg); /* Айнымалыны осы жерге қойдық */
     color: var(--text-main);
-    padding: 25px;
+    padding: 30px 15px; /* Жоғарыдан 30px бос орын (аватар үшін) */
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--border-color);
     transition: background 0.3s ease; /* Түс бірден емес, жұмсақ ауысады */
+}
+
+/* Аватарканы сал төмен түсіру */
+.sidebar-profile {
+    margin-top: 20px; 
+    margin-bottom: 40px; /* Мәзір сөздерінен алшақтату */
+    text-align: center;
+}
+
+/* Мәзір сөздерін (Жаңалықтар, Нұсқалар...) сәл төмен жылжыту */
+.sidebar-nav {
+    flex-grow: 1; /* Ортадағы бос орынды толтырып, "Шығу" батырмасын төмен итереді */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Батырмалардың арасы */
 }
 
 /* Мәзір батырмаларының түсі де өзгеруі керек */
@@ -270,23 +285,37 @@ body.dark-theme .sidebar {
     color: var(--text-main);      /* Режимге қарай түсі өзгереді */
 }
 
-/* Барлық бөлімдердің тақырып ұяшығы */
+/* Профиль, Баптаулар және Нұсқалар тақырыптарына ортақ стиль */
 .header-box {
     display: inline-block;
     background: var(--card-bg);
-    padding: 15px 25px;
-    border-radius: 18px;
-    border: 1px solid var(--border-color);
+    padding: 15px 30px;
+    border-radius: 20px;
+    
+    /* Көк түсті айқын шекара */
+    border: 2px solid rgba(59, 130, 246, 0.6); 
+    
+    /* Көк жарқыл эффектісі */
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); 
+    
     margin-bottom: 25px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: background 0.3s;
+    transition: all 0.3s ease;
 }
 
+/* Мышканы апарғанда эффектінің күшеюі */
+.header-box:hover {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.7);
+    border-color: rgba(59, 130, 246, 1);
+    transform: translateY(-2px); /* Сәл жоғары көтерілу */
+}
+
+/* Тақырып мәтінінің стилі */
 .header-box .view-title {
     margin: 0;
     font-size: 20px;
     font-weight: 700;
     color: var(--text-main);
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
 }
 
 /* Профиль мен Баптаулардағы негізгі үлкен карточкаларды сәл төмен түсіру */
@@ -305,4 +334,121 @@ body.dark-theme .sidebar {
 /* Егер бұрынғы "Тіркелу" сөзі көрінбей тұрса, мынаны да тексер: */
 #auth-title {
     color: #ffffff !important; /* Міндетті түрде ақ қылу */
+}
+
+/* Нұсқалар тақырыбының ұяшығына жарқыл қосу */
+.variants-header-box {
+    display: inline-block;
+    background: var(--card-bg);
+    padding: 15px 30px;
+    border-radius: 20px;
+    
+    /* Көк түсті айқын шекара (border) */
+    border: 2px solid rgba(59, 130, 246, 0.6); 
+    
+    /* Сыртқы көк жарқыл (glow) */
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); 
+    
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+}
+
+/* Мышканы апарғанда жарқылдың күшеюі (қаласаң) */
+.variants-header-box:hover {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.7);
+    border-color: rgba(59, 130, 246, 1);
+    transform: scale(1.02); /* Сәл ғана үлкею */
+}
+
+.variants-header-box h2 {
+    margin: 0;
+    font-size: 22px;
+    color: var(--text-main);
+    /* Мәтінге де жеңіл көк сәуле қосу */
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+/* ТЕЛЕФОНДАРҒА АРНАЛҒАН АДАПТИВТІ ДИЗАЙН */
+@media (max-width: 768px) {
+    /* Негізгі контейнерді бағытын өзгерту: қатардан бағанға */
+    .app-layout {
+        flex-direction: column;
+        display: block; /* Скролл дұрыс жұмыс істеуі үшін */
+    }
+
+    /* Сол жақтағы менюді (sidebar) жоғарыға шығару */
+    .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 10px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        position: relative; /* Қозғалмай тұруы үшін */
+    }
+
+    /* Профиль суреті мен атын кішірейту */
+    .sidebar-profile {
+        flex-direction: row; /* Сурет пен ат қатар тұрсын */
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .sidebar-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* Меню батырмаларын қатар қылып тізу */
+    .sidebar-nav {
+        display: flex;
+        overflow-x: auto; /* Егер сыймаса, оңға қарай скролл болады */
+        gap: 10px;
+        padding-bottom: 5px;
+    }
+
+    .nav-item {
+        white-space: nowrap; /* Мәтін келесі жолға түспейді */
+        padding: 8px 15px;
+        width: auto;
+    }
+
+    /* Негізгі мазмұн аймағын толық экранға жаю */
+    .main-content {
+        padding: 15px;
+        width: 100%;
+    }
+
+    /* Тақырып ұяшықтарын (header-box) экранға сыйғызу */
+    .header-box {
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+        padding: 12px 20px;
+    }
+
+    /* Нұсқа кубиктерін 2 қатарға қою */
+    .variants-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 баған */
+        gap: 12px;
+    }
+
+    /* Тіркелу карточкасын экран еніне ыңғайлау */
+    .auth-card {
+        width: 90%;
+        margin: 20px auto;
+        padding: 20px;
+    }
+}
+
+/* Шығу батырмасын ең төменге қою (бірақ өте жабысып тұрмауы үшін) */
+.logout-btn-container {
+    margin-top: auto; /* Мәзірдің ең астына итереді */
+    margin-bottom: 30px; /* Ең астыңғы жиектен сәл жоғары тұрады */
+    padding-top: 20px;
+}
+
+/* Шығу батырмасының өзіне стиль (егер керек болса) */
+.logout-btn {
+    width: 100%;
+    /* Қалған стильдеріңді осы жерге қоса бер */
 }
