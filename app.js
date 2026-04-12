@@ -76,8 +76,17 @@ async function handleAuth() {
 
 function toggleAuthMode() {
     isSignUpMode = !isSignUpMode;
-    document.getElementById('auth-title').innerText = isSignUpMode ? "Тіркелу" : "Кіру";
-    document.getElementById('username').style.display = isSignUpMode ? "block" : "none";
+    const title = document.getElementById('auth-title');
+    const btn = document.getElementById('auth-btn');
+    const userInp = document.getElementById('username');
+    const link = document.getElementById('toggle-link');
+
+    title.innerText = isSignUpMode ? "Тіркелу" : "Кіру";
+    btn.innerText = isSignUpMode ? "Тіркелу" : "Кіру";
+    userInp.style.display = isSignUpMode ? "block" : "none";
+    link.innerHTML = isSignUpMode ? 
+        'Аккаунтыңыз бар ма? <span>Кіру</span>' : 
+        'Аккаунтыңыз жоқ па? <span>Тіркелу</span>';
 }
 
 function togglePass() {
@@ -89,27 +98,28 @@ async function signOut() { await _supabase.auth.signOut(); location.reload(); }
 
 function setTheme(theme) {
     const body = document.body;
-    const btns = document.querySelectorAll('.theme-btn');
-    
-    btns.forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
 
     if (theme === 'light') {
         body.classList.add('light-theme');
-        // Күн батырмасын актив қылу
-        event.currentTarget.classList.add('active');
     } else {
         body.classList.remove('light-theme');
-        // Ай батырмасын актив қылу
-        event.currentTarget.classList.add('active');
     }
+    // Қай батырма басылғанын анықтау үшін
+    event.target.classList.add('active');
 }
 
 async function signInWithGoogle() {
-    // Егер басында '_supabase' болса, осы жерде де солай болуы тиіс
-    const { data, error } = await _supabase.auth.signInWithOAuth({ 
-        provider: 'google',
-        options: {
-            redirectTo: window.location.origin
-        }
-    });
+    try {
+        const { data, error } = await _supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                // Соңындағы "/" белгісі өте маңызды!
+                redirectTo: 'https://asik803.github.io/UTO--TEST/' 
+            }
+        });
+        if (error) throw error;
+    } catch (error) {
+        console.error("Google-мен кіру қатесі:", error.message);
+    }
 }
