@@ -452,3 +452,63 @@ body.dark-theme .sidebar {
     width: 100%;
     /* Қалған стильдеріңді осы жерге қоса бер */
 }
+
+/* Батырмаларды ортаға қою үшін контейнер */
+.social-auth {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+/* Дөңгелек Google батырмасы */
+.google-btn-round {
+    width: 50px; /* Ені мен биіктігі бірдей */
+    height: 50px;
+    background: white;
+    border-radius: 50%; /* Нақты дөңгелек жасайды */
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.google-btn-round img {
+    width: 24px;
+    height: 24px;
+}
+
+.google-btn-round:hover {
+    transform: scale(1.1) rotate(10deg); /* Сәл үлкейіп, қисаяды */
+    background: #f8f8f8;
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+}
+
+.separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: rgba(255, 255, 255, 0.4); /* Мәтін түсі сәл көмескі */
+    font-size: 13px;
+    text-transform: lowercase;
+}
+
+/* Мәтіннің алдындағы және артындағы сызықтар */
+.separator::before,
+.separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Жұқа сызық */
+}
+
+/* Мәтін мен сызық арасындағы қашықтық */
+.separator:not(:empty)::before {
+    margin-right: 15px;
+}
+
+.separator:not(:empty)::after {
+    margin-left: 15px;
+}
