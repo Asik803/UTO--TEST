@@ -1,62 +1,308 @@
+/* 1. БАЗАЛЫҚ ТҮСТЕР (Изначально қою көк - 3-фотодағыдай) */
+:root {
+    --bg-color: #0b0f1a;      /* Негізгі қою көк фон */
+    --card-bg: #161e2d;      /* Карточкалардың түсі */
+    --sidebar-bg: #0d111b;   /* Sidebar түсі */
+    --text-main: #f8fafc;    /* Ақшыл мәтін */
+    --primary: #3b82f6;      /* Көкшіл батырма түсі */
+    --border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* КҮНДІЗГІ ЖҰМСАҚ РЕЖИМ */
+body.light-theme {
+    --bg-color: #f0f2f5;      /* Жалпы фон (сұрғылт-ақ) */
+    --sidebar-bg: #e8ebf0;   /* Sidebar үшін сәл қоюлау жұмсақ түс */
+    --card-bg: #ffffff;      /* Карточкалар таза ақ */
+    --text-main: #1e293b;    /* Мәтін қара-көкшіл */
+    --border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* 3. ЭЛЕМЕНТТЕРГЕ ҚОЛДАНУ */
 body {
-    background-color: #0f172a;
-    color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    transition: background 0.3s, color 0.3s; /* Түс жайлап ауысуы үшін */
 }
 
-.card {
-    background-color: #1e293b;
-    padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    text-align: center;
-    width: 400px;
+.card-rounded, .welcome-box, .sidebar, .news-card, .v-cube {
+    background-color: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
 }
 
-input {
-    width: 90%;
+.main-input {
+    background: var(--bg-color);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-color); color: var(--text-white); margin: 0; overflow: hidden; }
+
+/* --- LOGIN FIXES --- */
+.auth-page { height: 100vh; display: flex; align-items: center; padding-left: 8%; background: var(--bg-color); }
+.auth-card { background: var(--card-bg); padding: 40px; border-radius: 24px; width: 360px; border: 1px solid rgba(255,255,255,0.05); }
+
+.password-wrapper { position: relative; }
+.eye-btn { position: absolute; right: 12px; top: 12px; background: none; border: none; cursor: pointer; color: white; font-size: 18px; }
+
+.auth-switch-box {
+    margin-top: 20px;
     padding: 12px;
-    margin: 10px 0;
-    border-radius: 8px;
-    border: none;
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.05); /* Кішкене ақшыл мөлдір фон */
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-button {
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
+/* Осы жер мәтінді ақ қылады */
+.auth-switch-box p {
+    margin: 0;
+    font-size: 13px;
     cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
+    color: #f8fafc; /* Мәтінді ақшыл түске өзгерту */
 }
 
-button:hover {
-    background-color: #2563eb;
+/* "Кіру" немесе "Тіркелу" деген көк сөздің түсі */
+.auth-switch-box span {
+    color: var(--primary); /* Бұл көк болып қала береді */
+    font-weight: 700;
+    margin-left: 5px;
 }
 
-.grid-container {
+/* --- CARD ROUNDING (2 & 3 фото) --- */
+.card-rounded {
+    background: var(--card-bg);
+    padding: 35px;
+    border-radius: 35px; /* Бұрыштарын көбірек дөңгелету */
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* SIDEBAR стилін айнымалыға байлау */
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    background-color: var(--sidebar-bg); /* Айнымалыны осы жерге қойдық */
+    color: var(--text-main);
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+    transition: background 0.3s ease; /* Түс бірден емес, жұмсақ ауысады */
+}
+
+/* Мәзір батырмаларының түсі де өзгеруі керек */
+.menu-item {
+    color: var(--text-main);
+    opacity: 0.8;
+}
+
+.menu-item.active {
+    background-color: var(--primary);
+    color: #ffffff; /* Активті батырма әрқашан ақ мәтінмен */
+    opacity: 1;
+}
+.user-avatar-container { width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 2px solid var(--primary); margin: 0 auto 10px; }
+#side-avatar { width: 100%; height: 100%; object-fit: cover; }
+.user-name { text-align: center; font-weight: 700; font-size: 14px; margin-bottom: 25px; }
+
+/* --- PROFILE FLEX --- */
+.profile-flex { display: flex; gap: 40px; }
+.profile-left { text-align: center; width: 150px; }
+.big-avatar { width: 140px; height: 140px; border-radius: 25px; overflow: hidden; border: 2px solid var(--primary); margin-bottom: 10px; }
+#edit-avatar-preview { width: 100%; height: 100%; object-fit: cover; }
+.profile-right { flex: 1; }
+.profile-right label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
+
+/* --- OTHER UI --- */
+.main-content { flex: 1; height: 100vh; overflow-y: auto; padding: 40px; box-sizing: border-box; }
+.welcome-banner { background: linear-gradient(135deg, #3b82f6, #1e40af); padding: 25px; border-radius: 20px; margin-bottom: 30px; }
+/* Кубиктер орналасқан тор (grid) */
+.variants-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 20px;
+    /* minmax ішіндегі 130px-ті 160px-ке өзгерттік, сонда кубиктер іріленеді */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+    gap: 25px; /* Кубиктердің арасы бір-біріне тиіп кетпеуі үшін */
+    padding: 10px 0;
 }
 
-.variant-btn {
-    background-color: #3b82f6;
-    padding: 15px;
-    border-radius: 8px;
-    font-size: 14px;
+/* Кубиктің өзі */
+.v-cube {
+    background-color: var(--card-bg);
+    aspect-ratio: 1/1; /* Нақты квадрат болуы үшін */
+    width: 100%;       /* Тордың ішін толық алуы үшін */
+    border-radius: 22px; /* Бұрыштарын сәл жұмсарттық */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Серіппелі әсер (эффект) */
+    box-sizing: border-box; /* Өлшемді дұрыс есептеу үшін */
 }
 
+/* Мышканы әкелгендегі эффект */
+.v-cube:hover {
+    background-color: var(--primary);
+    transform: translateY(-8px) scale(1.05); /* Сәл үлкейіп, жоғары көтеріледі */
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5); 
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Ішіндегі мәтін мен смайлик */
+.v-cube span {
+    font-size: 35px; /* Смайликті үлкейттік */
+    margin-bottom: 12px;
+}
+
+.v-cube b {
+    font-size: 16px; /* Жазуды анық қылдық */
+}
+.main-input { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; box-sizing: border-box; }
+.primary-btn { width: 100%; padding: 14px; background: var(--primary); border: none; border-radius: 12px; color: white; font-weight: 700; cursor: pointer; }
+.menu-item { width: 100%; padding: 12px; border-radius: 12px; border: none; background: transparent; color: #94a3b8; text-align: left; margin-bottom: 5px; cursor: pointer; }
+.menu-item.active { background: var(--primary); color: white; }
 .logout-btn {
-    margin-top: 20px;
-    background-color: #ef4444;
+    margin-top: 20px; /* 'auto'-ны өшіріп, нақты сан берсең, ол мәзірдің астына жабысып тұрады */
+    padding: 12px;
+    background: #ef444415;
+    color: #ef4444;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.setting-item { display: flex; justify-content: space-between; align-items: center; }
+.theme-switch { background: #080a10; padding: 5px; border-radius: 10px; display: flex; gap: 5px; }
+.theme-btn { border: none; background: transparent; color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.theme-btn.active { background: var(--primary); }
+
+/* "Қош келдіңіз" ұяшығы */
+.welcome-box {
+    background: rgba(255, 255, 255, 0.03); /* Өте күңгірт мөлдір түс */
+    border: 1px solid rgba(255, 255, 255, 0.05); /* Жіңішке жиек */
+    padding: 20px;
+    border-radius: 15px; /* Бұрыштарын дөңгелету */
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.welcome-box {
+    background: rgba(255, 255, 255, 0.03); /* Логиндегідей күңгірт мөлдір */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Жиегі */
+    padding: 30px; /* Ішкі бос орын - осы мәтінді ішке кіргізеді */
+    border-radius: 25px; /* Бұрыштарын дөңгелету */
+    margin-bottom: 20px;
+    box-sizing: border-box; /* Өлшемді дұрыс есептеу үшін */
+}
+
+.welcome-box h1 {
+    margin: 0 0 15px 0;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.motivation-text {
+    margin: 0 0 20px 0;
+    color: #94a3b8;
+    font-style: italic;
+    line-height: 1.5; /* Жол арақашықтығы */
+}
+
+.news-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    margin-bottom: 20px;
+}
+
+.news-status {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.badge {
+    background: #10b981;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+/* Қараңғы режим стилі */
+body.dark-theme {
+    --bg-color: #05070a; /* Тіпті күңгірт түс */
+    --card-bg: #0d1117;
+    --text-white: #e6edf3;
+}
+
+/* Егер сен айнымалыларды (variables) қолданбасаң, тікелей былай жаз: */
+body.dark-theme {
+    background-color: #05070a !important;
+    color: white !important;
+}
+
+body.dark-theme .card-rounded, 
+body.dark-theme .welcome-box,
+body.dark-theme .sidebar {
+    background-color: #0d1117 !important;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Нұсқалар тақырыбының ұяшығы */
+.variants-header-box {
+    display: inline-block;        /* Мәтін еніне қарай бейімделу */
+    background: var(--card-bg);   /* Режимге байланысты өзгеретін фон */
+    padding: 15px 25px;           /* Ішкі бос орындар */
+    border-radius: 18px;          /* Бұрыштарын дөңгелету */
+    border: 1px solid var(--border-color); /* Жіңішке жиек */
+    margin-bottom: 25px;          /* Кубиктерден қашықтық */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Жеңіл көлеңке */
+}
+
+.variants-header-box .view-title {
+    margin: 0;                    /* Артық арақашықтықты алып тастау */
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);      /* Режимге қарай түсі өзгереді */
+}
+
+/* Барлық бөлімдердің тақырып ұяшығы */
+.header-box {
+    display: inline-block;
+    background: var(--card-bg);
+    padding: 15px 25px;
+    border-radius: 18px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: background 0.3s;
+}
+
+.header-box .view-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* Профиль мен Баптаулардағы негізгі үлкен карточкаларды сәл төмен түсіру */
+.card-rounded {
+    margin-top: 10px;
+}
+
+/* Авторизация карточкасының ішіндегі тақырып (Тіркелу/Кіру) */
+.auth-card h2 {
+    color: #ffffff; /* Мәтінді таза ақ қылу */
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 700;
+}
+
+/* Егер бұрынғы "Тіркелу" сөзі көрінбей тұрса, мынаны да тексер: */
+#auth-title {
+    color: #ffffff !important; /* Міндетті түрде ақ қылу */
 }
