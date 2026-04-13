@@ -175,11 +175,10 @@ async function getQuestions(variantId) {
 
     container.innerHTML = '<p style="color: white;">Жүктелуде...</p>';
 
-    // Мына жерде Number() функциясын қолдану өте маңызды!
     const { data, error } = await _supabase
-    .from('questions')
-    .select('*')
-    .eq('variant', Number(variantId));
+        .from('questions')
+        .select('*')
+        .eq('variant', Number(variantId));
 
     if (error) {
         console.error("Supabase қатесі:", error.message);
@@ -205,13 +204,18 @@ async function getQuestions(variantId) {
         let optionsHTML = '';
         const options = q.options || [];
         
+        // --- 3-ҚАДАМДАҒЫ ӨЗГЕРІС ОСЫ ЖЕРДЕ ---
+        // Егер сұрақ типі 'multiple' болса - квадрат (checkbox), әйтпесе - нүкте (radio)
+        const inputType = q.type === 'multiple' ? 'checkbox' : 'radio';
+
         options.forEach(opt => {
             optionsHTML += `
                 <label style="display:block; margin: 10px 0; cursor: pointer;">
-                    <input type="radio" name="q${q.id}" value="${opt}" style="margin-right: 10px;">
+                    <input type="${inputType}" name="q${q.id}" value="${opt}" style="margin-right: 10px;">
                     ${opt}
                 </label>`;
         });
+        // -------------------------------------
 
         div.innerHTML = `<h3>${index + 1}. ${q.question_test}</h3>${optionsHTML}`;
         container.appendChild(div);
@@ -219,46 +223,58 @@ async function getQuestions(variantId) {
 }
 
 async function checkAnswers() {
-    console.log("Тексеру басталды...");
-
-    if (!currentVariantId) {
-        alert("Нұсқа анықталмады!");
-        return;
-    }
-
     const container = document.getElementById('quiz-container');
-    const selectedInputs = container.querySelectorAll('input[type="radio"]:checked');
+    let totalScore = 0;
 
-    // 1. Пайдаланушы жауаптарын жинау
-    let userAnswers = {};
-    selectedInputs.forEach(input => {
-        const qId = input.name.replace('q', '');
-        userAnswers[qId] = input.value;
-    });
-
-    // 2. Дұрыс жауаптарды базадан тарту
+    // 1. Деректерді базадан алу
     const { data: questions, error } = await _supabase
         .from('questions')
-        .select('id, correct_answer')
+        .select('*')
         .eq('variant', Number(currentVariantId));
 
-    if (error) {
-        console.error("Дерек алу қатесі:", error.message);
-        return;
-    }
+    if (error) return alert(error.message);
 
-    // 3. Баллды есептеу
-    let score = 0;
-    questions.forEach(q => {
-        // correct_answer ["A"] түрінде болса, бірінші элементін аламыз
-        const correctAnswer = Array.isArray(q.correct_answer) ? q.correct_answer[0] : JSON.parse(q.correct_answer)[0];
-        if (userAnswers[q.id] === correctAnswer) {
-            score++;
+    questions.forEach((q, index) => {
+        // Пайдаланушы таңдаған жауаптар (массив)
+        const selected = Array.from(container.querySelectorAll(`input[name="q${q.id}"]:checked`)).map(i => i.value);
+        
+        // Дұрыс жауаптар (базадан келетін массив)
+        const correct = Array.isArray(q.correct_answer) ? q.correct_answer : JSON.parse(q.correct_answer || "[]");
+        
+        const correctCount = correct.length; // Дұрыс жауаптар саны
+        const selectedCount = selected.length; // Белгіленген жауаптар саны
+        const rightSelected = selected.filter(val => correct.includes(val)).length; // Белгіленгендердің ішіндегі дұрысы
+        const wrongSelected = selectedCount - rightSelected; // Қате белгіленгендер саны
+
+        let questionScore = 0;
+
+        // 1-30 сұрақтар (1 балдық)
+        if (index < 30) {
+            if (rightSelected === 1 && selectedCount === 1) questionScore = 1;
+        } 
+        // 31-ден басталатын сұрақтар (2 балдық логика)
+        else {
+            if (correctCount === 1) {
+                if (selectedCount === 1 && rightSelected === 1) questionScore = 2;
+                else if (selectedCount === 2 && rightSelected === 1) questionScore = 1;
+                else questionScore = 0;
+            } 
+            else if (correctCount === 2) {
+                if (selectedCount === 2 && rightSelected === 2) questionScore = 2;
+                else if (selectedCount === 1 && rightSelected === 1) questionScore = 1;
+                else if (selectedCount === 3 && rightSelected === 2 && wrongSelected === 1) questionScore = 1;
+                else questionScore = 0;
+            }
+            else if (correctCount === 3) {
+                if (selectedCount === 3 && rightSelected === 3) questionScore = 2; // Сен 3 балл дедің, бірақ әдетте макс 2 балл болады, қажет болса 3-ке өзгерт
+                else if (selectedCount === 2 && rightSelected === 2) questionScore = 1;
+                else questionScore = 0;
+            }
         }
+        totalScore += questionScore;
     });
 
-    // 4. Нәтижені экранға шығару
-    showResult(score, questions.length);
+    showResult(totalScore, questions.length); // Нәтижені көрсету
 }
 
 function showResult(score, total) {
