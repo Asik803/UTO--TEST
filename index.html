@@ -67,11 +67,6 @@
                 <div class="welcome-box">
                     <h1>Қош келдіңіз! 👋</h1>
                     <p class="motivation-text">"Білімді болу – тереңінен су ішкенмен тең. Оқудан ешқашан жалықпа."</p>
-
-                    <div class="news-divider"></div> <div class="news-status">
-                        <span class="badge">Жаңа</span>
-                        <p>Google арқылы тіркелу қосылды, жақын арада телефон номері арқылы қосатын боламын.</p>
-                    </div>
         
                     <div class="news-divider"></div> <div class="news-status">
                         <span class="badge">Жаңа</span>
@@ -94,8 +89,13 @@
                 <div class="header-box">
                     <h2 class="view-title">📚 Оқу нұсқалары</h2>
                 </div>
-    
-                <div class="variants-grid" id="variant-grid">
+
+                <div class="variants-grid" id="variant-grid"></div>
+
+                <div id="active-quiz-view" style="display: none; margin-top: 20px;">
+                    <button onclick="location.reload()" class="primary-btn" style="margin-bottom: 20px;">⬅️ Артқа қайту</button>
+                        <div id="quiz-container"></div>
+                    <button onclick="checkAnswers()" class="primary-btn" style="margin-top: 20px;">Тестті аяқтау</button>
                 </div>
             </section>
 
