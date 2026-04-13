@@ -1,6 +1,17 @@
 const SUPABASE_URL = 'https://betrwnzuvnygwwdonxrr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_PYIMdRevKp9fi1qPXnNijw_2uITeMpF';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJldHJ3bnp1dm55Z3d3ZG9ueHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODcxNjAsImV4cCI6MjA5MTU2MzE2MH0.9AX09-aAgfcvwuHsTyvUx9UqRSVz28ufyLiA05kBEKU';
+// Анықталуы (image_9e3dd0.png бойынша):
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Қолданылуы:
+async function loginWithGoogle() {
+    const { data, error } = await _supabase.auth.signInWithOAuth({ // Осы жерде _supabase болуы керек!
+        provider: 'google',
+        options: {
+            redirectTo: 'https://asik803.github.io/UTO--TEST/'
+        }
+    });
+}
 
 const authSection = document.getElementById('auth-section');
 const quizSelection = document.getElementById('quiz-selection');
