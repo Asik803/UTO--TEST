@@ -225,8 +225,9 @@ async function getQuestions(variantId) {
 async function checkAnswers() {
     const container = document.getElementById('quiz-container');
     let totalScore = 0;
+    let maxPossibleScore = 0; // Максималды баллды есептеу (50-ге жету үшін)
+    let reviewData = []; // Қатемен жұмыс үшін деректер жинау
 
-    // 1. Деректерді базадан алу
     const { data: questions, error } = await _supabase
         .from('questions')
         .select('*')
@@ -235,46 +236,85 @@ async function checkAnswers() {
     if (error) return alert(error.message);
 
     questions.forEach((q, index) => {
-        // Пайдаланушы таңдаған жауаптар (массив)
         const selected = Array.from(container.querySelectorAll(`input[name="q${q.id}"]:checked`)).map(i => i.value);
-        
-        // Дұрыс жауаптар (базадан келетін массив)
         const correct = Array.isArray(q.correct_answer) ? q.correct_answer : JSON.parse(q.correct_answer || "[]");
         
-        const correctCount = correct.length; // Дұрыс жауаптар саны
-        const selectedCount = selected.length; // Белгіленген жауаптар саны
-        const rightSelected = selected.filter(val => correct.includes(val)).length; // Белгіленгендердің ішіндегі дұрысы
-        const wrongSelected = selectedCount - rightSelected; // Қате белгіленгендер саны
+        const correctCount = correct.length;
+        const selectedCount = selected.length;
+        const rightSelected = selected.filter(val => correct.includes(val)).length;
+        const wrongSelected = selectedCount - rightSelected;
 
         let questionScore = 0;
+        let maxQScore = (index + 1 >= 31) ? 2 : 1; // 31-ден бастап 2 балл, оған дейін 1 балл
+        maxPossibleScore += maxQScore;
 
-        // 1-30 сұрақтар (1 балдық)
-        if (index < 30) {
+        // Баллды есептеу логикасы (сенің ережелерің бойынша)
+        if (index + 1 < 31) {
             if (rightSelected === 1 && selectedCount === 1) questionScore = 1;
-        } 
-        // 31-ден басталатын сұрақтар (2 балдық логика)
-        else {
+        } else {
             if (correctCount === 1) {
                 if (selectedCount === 1 && rightSelected === 1) questionScore = 2;
                 else if (selectedCount === 2 && rightSelected === 1) questionScore = 1;
-                else questionScore = 0;
-            } 
-            else if (correctCount === 2) {
+            } else if (correctCount === 2) {
                 if (selectedCount === 2 && rightSelected === 2) questionScore = 2;
-                else if (selectedCount === 1 && rightSelected === 1) questionScore = 1;
-                else if (selectedCount === 3 && rightSelected === 2 && wrongSelected === 1) questionScore = 1;
-                else questionScore = 0;
-            }
-            else if (correctCount === 3) {
-                if (selectedCount === 3 && rightSelected === 3) questionScore = 2; // Сен 3 балл дедің, бірақ әдетте макс 2 балл болады, қажет болса 3-ке өзгерт
+                else if ((selectedCount === 1 && rightSelected === 1) || (selectedCount === 3 && rightSelected === 2 && wrongSelected === 1)) questionScore = 1;
+            } else if (correctCount === 3) {
+                if (selectedCount === 3 && rightSelected === 3) questionScore = 2;
                 else if (selectedCount === 2 && rightSelected === 2) questionScore = 1;
-                else questionScore = 0;
             }
         }
+        
         totalScore += questionScore;
+
+        // Қатемен жұмыс үшін деректі сақтау
+        reviewData.push({
+            question: q.question_test,
+            userAnswers: selected,
+            correctAnswers: correct,
+            isCorrect: questionScore === maxQScore,
+            scoreReceived: questionScore,
+            maxScore: maxQScore
+        });
     });
 
-    showResult(totalScore, questions.length); // Нәтижені көрсету
+    showDetailedResult(totalScore, maxPossibleScore, reviewData);
+}
+
+function showDetailedResult(score, total, review) {
+    const container = document.getElementById('quiz-container');
+    const percent = Math.round((score / total) * 100);
+    
+    // 1. Жалпы нәтиже блогы
+    let html = `
+        <div class="result-card" style="text-align: center; color: white; padding: 30px; background: rgba(255,255,255,0.05); border-radius: 15px; margin-bottom: 20px;">
+            <h2 style="font-size: 32px;">📊 Тест нәтижесі: ${score} / ${total}</h2>
+            <p style="font-size: 20px;">Көрсеткіш: ${percent}%</p>
+            <button onclick="location.reload()" class="primary-btn" style="margin-top: 15px;">🏠 Басты мәзір</button>
+        </div>
+        <h3 style="color: white; margin: 20px 0;">🔍 Қатемен жұмыс:</h3>
+    `;
+
+    // 2. Әр сұрақ бойынша есеп
+    review.forEach((item, i) => {
+        const statusColor = item.scoreReceived === item.maxScore ? '#4CAF50' : (item.scoreReceived > 0 ? '#FFC107' : '#F44336');
+        
+        html += `
+            <div style="background: rgba(255,255,255,0.08); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid ${statusColor}; color: white;">
+                <p><strong>${i + 1}. ${item.question}</strong></p>
+                <p style="font-size: 0.9em; margin-top: 5px;">
+                    <span style="color: #ff9800;">Сенің жауабың:</span> ${item.userAnswers.join(', ') || 'Белгіленбеген'} <br>
+                    <span style="color: #4CAF50;">Дұрыс жауап:</span> ${item.correctAnswers.join(', ')}
+                </p>
+                <p style="font-size: 0.8em; text-align: right; margin: 0;">Балл: ${item.scoreReceived} / ${item.maxScore}</p>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+    
+    // Аяқтау батырмасын жасыру
+    const finishBtn = document.querySelector('button[onclick="checkAnswers()"]');
+    if (finishBtn) finishBtn.style.display = 'none';
 }
 
 function showResult(score, total) {
