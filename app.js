@@ -3,6 +3,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // Анықталуы (image_9e3dd0.png бойынша):
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let currentVariantId = null; // Таңдалған нұсқаны сақтау үшін
+
 // Қолданылуы:
 async function loginWithGoogle() {
     const { data, error } = await _supabase.auth.signInWithOAuth({ // Осы жерде _supabase болуы керек!
@@ -140,6 +142,7 @@ function renderVariants() {
 }
 
 async function startVariant(variantId) {
+    currentVariantId = variantId; // Нұсқа нөмірін сақтап аламыз
     console.log(variantId + "-нұсқа таңдалды");
 
     // Нұсқалар тізімін жасыру
@@ -172,10 +175,11 @@ async function getQuestions(variantId) {
 
     container.innerHTML = '<p style="color: white;">Жүктелуде...</p>';
 
+    // Мына жерде Number() функциясын қолдану өте маңызды!
     const { data, error } = await _supabase
-        .from('questions')
-        .select('*')
-        .eq('variant', Number(variantId));
+    .from('questions')
+    .select('*')
+    .eq('variant', Number(variantId));
 
     if (error) {
         console.error("Supabase қатесі:", error.message);
@@ -212,4 +216,67 @@ async function getQuestions(variantId) {
         div.innerHTML = `<h3>${index + 1}. ${q.question_test}</h3>${optionsHTML}`;
         container.appendChild(div);
     });
+}
+
+async function checkAnswers() {
+    console.log("Тексеру басталды...");
+
+    if (!currentVariantId) {
+        alert("Нұсқа анықталмады!");
+        return;
+    }
+
+    const container = document.getElementById('quiz-container');
+    const selectedInputs = container.querySelectorAll('input[type="radio"]:checked');
+
+    // 1. Пайдаланушы жауаптарын жинау
+    let userAnswers = {};
+    selectedInputs.forEach(input => {
+        const qId = input.name.replace('q', '');
+        userAnswers[qId] = input.value;
+    });
+
+    // 2. Дұрыс жауаптарды базадан тарту
+    const { data: questions, error } = await _supabase
+        .from('questions')
+        .select('id, correct_answer')
+        .eq('variant', Number(currentVariantId));
+
+    if (error) {
+        console.error("Дерек алу қатесі:", error.message);
+        return;
+    }
+
+    // 3. Баллды есептеу
+    let score = 0;
+    questions.forEach(q => {
+        // correct_answer ["A"] түрінде болса, бірінші элементін аламыз
+        const correctAnswer = Array.isArray(q.correct_answer) ? q.correct_answer[0] : JSON.parse(q.correct_answer)[0];
+        if (userAnswers[q.id] === correctAnswer) {
+            score++;
+        }
+    });
+
+    // 4. Нәтижені экранға шығару
+    showResult(score, questions.length);
+}
+
+function showResult(score, total) {
+    const container = document.getElementById('quiz-container');
+    const percent = Math.round((score / total) * 100);
+    
+    container.innerHTML = `
+        <div style="text-align: center; color: white; padding: 40px; background: rgba(255,255,255,0.1); border-radius: 20px; margin-top: 20px;">
+            <h2 style="font-size: 40px;">📊 Нәтиже</h2>
+            <p style="font-size: 24px;">Дұрыс жауап: ${score} / ${total}</p>
+            <p style="font-size: 20px;">Көрсеткіш: ${percent}%</p>
+            <button onclick="location.reload()" class="primary-btn" style="margin-top: 20px; background: #4a90e2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                🏠 Басты мәзірге қайту
+            </button>
+        </div>
+    `;
+    
+    // Аяқтау батырмасын жасыру
+    const finishBtn = document.querySelector('button[onclick="checkAnswers()"]');
+    if (finishBtn) finishBtn.style.display = 'none';
 }
