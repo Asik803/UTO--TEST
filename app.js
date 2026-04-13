@@ -41,16 +41,6 @@ function renderApp(user) {
 
     renderVariants();
 }
-
-function renderVariants() {
-    const grid = document.getElementById('variant-grid');
-    if(!grid) return;
-    grid.innerHTML = '';
-    for (let i = 1; i <= 14; i++) {
-        grid.innerHTML += `<div class="v-cube"><span>📖</span><b>${i}-нұсқа</b></div>`;
-    }
-}
-
 async function updateProfile() {
     const newName = document.getElementById('edit-username').value;
     const newAvatar = document.getElementById('avatar-url-input').value;
@@ -133,4 +123,93 @@ async function signInWithGoogle() {
     } catch (error) {
         console.error("Google-мен кіру қатесі:", error.message);
     }
+}
+
+function renderVariants() {
+    const grid = document.getElementById('variant-grid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    for (let i = 1; i <= 14; i++) {
+        // onclick қосылды, cursor:pointer басылатынын білдіреді
+        grid.innerHTML += `
+            <div class="v-cube" onclick="startVariant(${i})" style="cursor: pointer;">
+                <span>📖</span>
+                <b>${i}-нұсқа</b>
+            </div>`;
+    }
+}
+
+async function startVariant(variantId) {
+    console.log(variantId + "-нұсқа таңдалды");
+
+    // Нұсқалар тізімін жасыру
+    const grid = document.getElementById('variant-grid');
+    if (grid) grid.style.display = 'none';
+
+    // Тест блогын көрсету
+    const quizView = document.getElementById('active-quiz-view');
+    if (quizView) {
+        quizView.style.display = 'block';
+    } else {
+        console.error("active-quiz-view блогы табылмады!");
+        return;
+    }
+
+    // Сұрақтарды тарту
+    await getQuestions(variantId);
+}
+
+function backToVariants() {
+    // Кері қайту функциясы
+    document.getElementById('variant-grid').style.display = 'grid';
+    document.querySelector('.header-box').style.display = 'block';
+    document.getElementById('active-quiz-view').style.display = 'none';
+}
+
+async function getQuestions(variantId) {
+    const container = document.getElementById('quiz-container');
+    if (!container) return;
+
+    container.innerHTML = '<p style="color: white;">Жүктелуде...</p>';
+
+    const { data, error } = await _supabase
+        .from('questions')
+        .select('*')
+        .eq('variant', Number(variantId));
+
+    if (error) {
+        console.error("Supabase қатесі:", error.message);
+        return;
+    }
+
+    container.innerHTML = ''; 
+
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p style="color: white;">Бұл нұсқада сұрақтар жоқ.</p>';
+        return;
+    }
+
+    data.forEach((q, index) => {
+        const div = document.createElement('div');
+        div.className = 'question-card';
+        div.style.background = "rgba(255,255,255,0.1)";
+        div.style.padding = "20px";
+        div.style.marginBottom = "15px";
+        div.style.borderRadius = "10px";
+        div.style.color = "white";
+
+        let optionsHTML = '';
+        const options = q.options || [];
+        
+        options.forEach(opt => {
+            optionsHTML += `
+                <label style="display:block; margin: 10px 0; cursor: pointer;">
+                    <input type="radio" name="q${q.id}" value="${opt}" style="margin-right: 10px;">
+                    ${opt}
+                </label>`;
+        });
+
+        div.innerHTML = `<h3>${index + 1}. ${q.question_test}</h3>${optionsHTML}`;
+        container.appendChild(div);
+    });
 }
