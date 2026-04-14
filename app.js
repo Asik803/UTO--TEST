@@ -258,80 +258,98 @@ async function getQuestions(variantId) {
     });
 }
 
-async function checkAnswers() {
+async function getQuestions(variantId) {
     const container = document.getElementById('quiz-container');
-    let totalScore = 0;
-    let maxPossibleScore = 0;
-    let reviewData = []; // Қатемен жұмыс үшін деректер жинау
+    if (!container) return;
 
-    const { data: questions, error } = await _supabase
+    container.innerHTML = '<p style="color: white; text-align:center;">Жүктелуде...</p>';
+
+    const { data, error } = await _supabase
         .from('questions')
         .select('*')
-        .eq('variant', Number(currentVariantId));
+        .eq('variant', Number(variantId));
 
-    if (error) return alert(error.message);
+    if (error) {
+        console.error("Supabase қатесі:", error.message);
+        container.innerHTML = `<p style="color: red;">Қате: ${error.message}</p>`;
+        return;
+    }
 
-    questions.forEach((q, index) => {
-        let questionScore = 0;
-        let maxQScore = (index + 1 >= 31) ? 2 : 1; 
-        let userDisplayAnswers = "";
-        let correctDisplayAnswers = "";
+    container.innerHTML = ''; 
 
-        // 1. СӘЙКЕСТЕНДІРУ (31-35 сұрақтар үшін)
-        if (q.type === 'matching') {
-            const correct = typeof q.correct_answer === 'string' ? JSON.parse(q.correct_answer) : q.correct_answer;
-            const userA = container.querySelector(`select[name="q${q.id}_А"]`)?.value;
-            const userB = container.querySelector(`select[name="q${q.id}_В"]`)?.value;
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p style="color: white; text-align:center;">Бұл нұсқада сұрақтар жоқ.</p>';
+        return;
+    }
 
-            if (userA === String(correct.А)) questionScore++;
-            if (userB === String(correct.В)) questionScore++;
+    data.forEach((q, index) => {
+        const div = document.createElement('div');
+        div.className = 'question-card';
+        div.style.cssText = "background: rgba(255,255,255,0.1); padding: 20px; margin-bottom: 15px; border-radius: 10px; color: white;";
 
-            userDisplayAnswers = `А-${userA || '?'}, В-${userB || '?'}`;
-            correctDisplayAnswers = `А-${correct.А}, В-${correct.В}`;
-        } 
-        
-        // 2. БІР ЖӘНЕ КӨП ЖАУАПТЫ (Single/Multiple)
-        else {
-            const selected = Array.from(container.querySelectorAll(`input[name="q${q.id}"]:checked`)).map(i => i.value);
-            const correct = Array.isArray(q.correct_answer) ? q.correct_answer : JSON.parse(q.correct_answer || "[]");
-            
-            const selectedCount = selected.length;
-            const rightSelected = selected.filter(val => correct.includes(val)).length;
-            const wrongSelected = selectedCount - rightSelected;
-            const correctCount = correct.length;
+        try {
+            // 1. СӘЙКЕСТЕНДІРУ ТИПІ (Matching)
+            if (q.type === 'matching') {
+                let opts = q.options;
+                if (typeof opts === 'string') opts = JSON.parse(opts);
 
-            userDisplayAnswers = selected.join(', ') || 'Белгіленбеген';
-            correctDisplayAnswers = correct.join(', ');
+                let leftHTML = '';
+                let rightHTML = '';
 
-            if (index < 30) { // 1-30 сұрақтар (1 балл)
-                if (rightSelected === 1 && selectedCount === 1) questionScore = 1;
-            } else { // 36-40 сұрақтар (2 баллдық логика)
-                if (correctCount === 1) {
-                    if (selectedCount === 1 && rightSelected === 1) questionScore = 2;
-                    else if (selectedCount === 2 && rightSelected === 1) questionScore = 1;
-                } else if (correctCount === 2) {
-                    if (selectedCount === 2 && rightSelected === 2) questionScore = 2;
-                    else if ((selectedCount === 1 && rightSelected === 1) || (selectedCount === 3 && rightSelected === 2 && wrongSelected === 1)) questionScore = 1;
-                } else if (correctCount === 3) {
-                    if (selectedCount === 3 && rightSelected === 3) questionScore = 2;
-                    else if (selectedCount === 2 && rightSelected === 2) questionScore = 1;
+                opts.left.forEach((text, i) => {
+                    const label = i === 0 ? 'А' : 'В';
+                    leftHTML += `
+                        <div style="margin-bottom: 15px;">
+                            <span style="background: #4a90e2; padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${label}</span> 
+                            ${text}
+                            <select name="q${q.id}_${label}" style="margin-left: 10px; padding: 5px; color: black; border-radius: 5px; width: 65px;">
+                                <option value="">?</option>
+                                ${opts.right.map((_, j) => `<option value="${j+1}">${j+1}</option>`).join('')}
+                            </select>
+                        </div>`;
+                });
+
+                opts.right.forEach((text, j) => {
+                    rightHTML += `<div style="margin-bottom: 10px;"><b>${j+1})</b> ${text}</div>`;
+                });
+
+                div.innerHTML = `
+                    <h3 style="margin-bottom:15px;">${index + 1}. Сәйкестендіріңіз</h3>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px;">${leftHTML}</div>
+                        <div style="flex: 1; min-width: 200px; border-left: 1px solid #555; padding-left: 20px;">${rightHTML}</div>
+                    </div>`;
+            } 
+            // 2. ҚАЛЫПТЫ ТИПТЕР (Single / Multiple)
+            else {
+                let optionsHTML = '';
+                let options = [];
+                
+                // options-ты өңдеу: егер string болса parse жасаймыз, әйтпесе сол күйінде аламыз
+                if (typeof q.options === 'string') {
+                    options = JSON.parse(q.options);
+                } else {
+                    options = q.options || [];
                 }
+
+                const inputType = q.type === 'multiple' ? 'checkbox' : 'radio';
+
+                options.forEach(opt => {
+                    optionsHTML += `
+                        <label style="display:block; margin: 12px 0; cursor: pointer; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px;">
+                            <input type="${inputType}" name="q${q.id}" value="${opt}" style="margin-right: 10px; transform: scale(1.2);">
+                            ${opt}
+                        </label>`;
+                });
+                div.innerHTML = `<h3>${index + 1}. ${q.question_test || 'Сұрақ мәтіні бос'}</h3>${optionsHTML}`;
             }
+        } catch (err) {
+            console.error(`Қате шыққан сұрақ ID: ${q.id}`, err);
+            div.innerHTML = `<p style="color: #ffbaba;">⚠️ Сұрақты жүктеу қатесі (ID: ${q.id}). Базадағы форматты тексеріңіз.</p>`;
         }
 
-        totalScore += questionScore;
-        maxPossibleScore += maxQScore;
-
-        reviewData.push({
-            question: q.question_test || "Сәйкестендіру тапсырмасы",
-            user: userDisplayAnswers,
-            correct: correctDisplayAnswers,
-            score: questionScore,
-            max: maxQScore
-        });
+        container.appendChild(div);
     });
-
-    showDetailedResult(totalScore, maxPossibleScore, reviewData);
 }
 
 function showDetailedResult(score, total, review) {
