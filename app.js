@@ -225,7 +225,7 @@ async function getQuestions(variantId) {
 async function checkAnswers() {
     const container = document.getElementById('quiz-container');
     let totalScore = 0;
-    let maxPossibleScore = 0; // Максималды баллды есептеу (50-ге жету үшін)
+    let maxPossibleScore = 0;
     let reviewData = []; // Қатемен жұмыс үшін деректер жинау
 
     const { data: questions, error } = await _supabase
@@ -236,44 +236,62 @@ async function checkAnswers() {
     if (error) return alert(error.message);
 
     questions.forEach((q, index) => {
-        const selected = Array.from(container.querySelectorAll(`input[name="q${q.id}"]:checked`)).map(i => i.value);
-        const correct = Array.isArray(q.correct_answer) ? q.correct_answer : JSON.parse(q.correct_answer || "[]");
-        
-        const correctCount = correct.length;
-        const selectedCount = selected.length;
-        const rightSelected = selected.filter(val => correct.includes(val)).length;
-        const wrongSelected = selectedCount - rightSelected;
-
         let questionScore = 0;
-        let maxQScore = (index + 1 >= 31) ? 2 : 1; // 31-ден бастап 2 балл, оған дейін 1 балл
-        maxPossibleScore += maxQScore;
+        let maxQScore = (index + 1 >= 31) ? 2 : 1; 
+        let userDisplayAnswers = "";
+        let correctDisplayAnswers = "";
 
-        // Баллды есептеу логикасы (сенің ережелерің бойынша)
-        if (index + 1 < 31) {
-            if (rightSelected === 1 && selectedCount === 1) questionScore = 1;
-        } else {
-            if (correctCount === 1) {
-                if (selectedCount === 1 && rightSelected === 1) questionScore = 2;
-                else if (selectedCount === 2 && rightSelected === 1) questionScore = 1;
-            } else if (correctCount === 2) {
-                if (selectedCount === 2 && rightSelected === 2) questionScore = 2;
-                else if ((selectedCount === 1 && rightSelected === 1) || (selectedCount === 3 && rightSelected === 2 && wrongSelected === 1)) questionScore = 1;
-            } else if (correctCount === 3) {
-                if (selectedCount === 3 && rightSelected === 3) questionScore = 2;
-                else if (selectedCount === 2 && rightSelected === 2) questionScore = 1;
+        // 1. СӘЙКЕСТЕНДІРУ (31-35 сұрақтар үшін)
+        if (q.type === 'matching') {
+            const correct = typeof q.correct_answer === 'string' ? JSON.parse(q.correct_answer) : q.correct_answer;
+            const userA = container.querySelector(`select[name="q${q.id}_А"]`)?.value;
+            const userB = container.querySelector(`select[name="q${q.id}_В"]`)?.value;
+
+            if (userA === String(correct.А)) questionScore++;
+            if (userB === String(correct.В)) questionScore++;
+
+            userDisplayAnswers = `А-${userA || '?'}, В-${userB || '?'}`;
+            correctDisplayAnswers = `А-${correct.А}, В-${correct.В}`;
+        } 
+        
+        // 2. БІР ЖӘНЕ КӨП ЖАУАПТЫ (Single/Multiple)
+        else {
+            const selected = Array.from(container.querySelectorAll(`input[name="q${q.id}"]:checked`)).map(i => i.value);
+            const correct = Array.isArray(q.correct_answer) ? q.correct_answer : JSON.parse(q.correct_answer || "[]");
+            
+            const selectedCount = selected.length;
+            const rightSelected = selected.filter(val => correct.includes(val)).length;
+            const wrongSelected = selectedCount - rightSelected;
+            const correctCount = correct.length;
+
+            userDisplayAnswers = selected.join(', ') || 'Белгіленбеген';
+            correctDisplayAnswers = correct.join(', ');
+
+            if (index < 30) { // 1-30 сұрақтар (1 балл)
+                if (rightSelected === 1 && selectedCount === 1) questionScore = 1;
+            } else { // 36-40 сұрақтар (2 баллдық логика)
+                if (correctCount === 1) {
+                    if (selectedCount === 1 && rightSelected === 1) questionScore = 2;
+                    else if (selectedCount === 2 && rightSelected === 1) questionScore = 1;
+                } else if (correctCount === 2) {
+                    if (selectedCount === 2 && rightSelected === 2) questionScore = 2;
+                    else if ((selectedCount === 1 && rightSelected === 1) || (selectedCount === 3 && rightSelected === 2 && wrongSelected === 1)) questionScore = 1;
+                } else if (correctCount === 3) {
+                    if (selectedCount === 3 && rightSelected === 3) questionScore = 2;
+                    else if (selectedCount === 2 && rightSelected === 2) questionScore = 1;
+                }
             }
         }
-        
-        totalScore += questionScore;
 
-        // Қатемен жұмыс үшін деректі сақтау
+        totalScore += questionScore;
+        maxPossibleScore += maxQScore;
+
         reviewData.push({
-            question: q.question_test,
-            userAnswers: selected,
-            correctAnswers: correct,
-            isCorrect: questionScore === maxQScore,
-            scoreReceived: questionScore,
-            maxScore: maxQScore
+            question: q.question_test || "Сәйкестендіру тапсырмасы",
+            user: userDisplayAnswers,
+            correct: correctDisplayAnswers,
+            score: questionScore,
+            max: maxQScore
         });
     });
 
@@ -284,37 +302,33 @@ function showDetailedResult(score, total, review) {
     const container = document.getElementById('quiz-container');
     const percent = Math.round((score / total) * 100);
     
-    // 1. Жалпы нәтиже блогы
     let html = `
-        <div class="result-card" style="text-align: center; color: white; padding: 30px; background: rgba(255,255,255,0.05); border-radius: 15px; margin-bottom: 20px;">
-            <h2 style="font-size: 32px;">📊 Тест нәтижесі: ${score} / ${total}</h2>
-            <p style="font-size: 20px;">Көрсеткіш: ${percent}%</p>
-            <button onclick="location.reload()" class="primary-btn" style="margin-top: 15px;">🏠 Басты мәзір</button>
+        <div style="text-align: center; color: white; padding: 30px; background: rgba(255,255,255,0.1); border-radius: 15px; margin-bottom: 25px;">
+            <h2 style="font-size: 35px; margin: 0;">Нәтиже: ${score} / ${total}</h2>
+            <p style="font-size: 20px; opacity: 0.8;">Көрсеткіш: ${percent}%</p>
+            <button onclick="location.reload()" style="margin-top: 15px; padding: 10px 25px; cursor: pointer; border-radius: 8px; border: none; background: #4a90e2; color: white;">🏠 Басты мәзір</button>
         </div>
-        <h3 style="color: white; margin: 20px 0;">🔍 Қатемен жұмыс:</h3>
+        <h3 style="color: white; border-bottom: 1px solid #444; padding-bottom: 10px;">🔍 Қатемен жұмыс:</h3>
     `;
 
-    // 2. Әр сұрақ бойынша есеп
     review.forEach((item, i) => {
-        const statusColor = item.scoreReceived === item.maxScore ? '#4CAF50' : (item.scoreReceived > 0 ? '#FFC107' : '#F44336');
+        const isCorrect = item.score === item.max;
+        const color = isCorrect ? '#4CAF50' : (item.score > 0 ? '#FFC107' : '#F44336');
         
         html += `
-            <div style="background: rgba(255,255,255,0.08); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid ${statusColor}; color: white;">
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 5px solid ${color}; color: white;">
                 <p><strong>${i + 1}. ${item.question}</strong></p>
-                <p style="font-size: 0.9em; margin-top: 5px;">
-                    <span style="color: #ff9800;">Сенің жауабың:</span> ${item.userAnswers.join(', ') || 'Белгіленбеген'} <br>
-                    <span style="color: #4CAF50;">Дұрыс жауап:</span> ${item.correctAnswers.join(', ')}
-                </p>
-                <p style="font-size: 0.8em; text-align: right; margin: 0;">Балл: ${item.scoreReceived} / ${item.maxScore}</p>
+                <div style="font-size: 0.9em; margin-top: 8px;">
+                    <p style="margin: 3px 0;"><span style="color: #bbb;">Сіздің жауабыңыз:</span> <span style="color: ${color}">${item.user}</span></p>
+                    <p style="margin: 3px 0;"><span style="color: #bbb;">Дұрыс жауап:</span> <span style="color: #4CAF50">${item.correct}</span></p>
+                </div>
+                <p style="text-align: right; font-size: 0.8em; margin: 0; opacity: 0.7;">Балл: ${item.score} / ${item.max}</p>
             </div>
         `;
     });
 
     container.innerHTML = html;
-    
-    // Аяқтау батырмасын жасыру
-    const finishBtn = document.querySelector('button[onclick="checkAnswers()"]');
-    if (finishBtn) finishBtn.style.display = 'none';
+    window.scrollTo(0, 0); // Экранды жоғарыға шығару
 }
 
 function showResult(score, total) {
