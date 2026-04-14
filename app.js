@@ -169,95 +169,7 @@ function backToVariants() {
     document.getElementById('active-quiz-view').style.display = 'none';
 }
 
-async function getQuestions(variantId) {
-    const container = document.getElementById('quiz-container');
-    if (!container) return;
-
-    container.innerHTML = '<p style="color: white;">Жүктелуде...</p>';
-
-    const { data, error } = await _supabase
-        .from('questions')
-        .select('*')
-        .eq('variant', Number(variantId));
-
-    if (error) {
-        console.error("Supabase қатесі:", error.message);
-        return;
-    }
-
-    container.innerHTML = ''; 
-
-    if (!data || data.length === 0) {
-        container.innerHTML = '<p style="color: white;">Бұл нұсқада сұрақтар жоқ.</p>';
-        return;
-    }
-
-    data.forEach((q, index) => {
-        const div = document.createElement('div');
-        div.className = 'question-card';
-        div.style.background = "rgba(255,255,255,0.1)";
-        div.style.padding = "20px";
-        div.style.marginBottom = "15px";
-        div.style.borderRadius = "10px";
-        div.style.color = "white";
-
-        // 1. СӘЙКЕСТЕНДІРУ ТИПІ (Matching)
-        if (q.type === 'matching') {
-            const opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-            let leftHTML = '';
-            let rightHTML = '';
-
-            opts.left.forEach((text, i) => {
-                const label = i === 0 ? 'А' : 'В';
-                leftHTML += `
-                    <div style="margin-bottom: 15px;">
-                        <span style="background: #4a90e2; padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${label}</span> 
-                        ${text}
-                        <select name="q${q.id}_${label}" style="margin-left: 10px; padding: 5px; color: black; border-radius: 5px; width: 60px;">
-                            <option value="">?</option>
-                            ${opts.right.map((_, j) => `<option value="${j+1}">${j+1}</option>`).join('')}
-                        </select>
-                    </div>`;
-            });
-
-            opts.right.forEach((text, j) => {
-                rightHTML += `<div style="margin-bottom: 10px;"><b>${j+1})</b> ${text}</div>`;
-            });
-
-            div.innerHTML = `
-                <h3>${index + 1}. Сәйкестендіріңіз</h3>
-                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
-                    <div style="flex: 1; min-width: 200px;">${leftHTML}</div>
-                    <div style="flex: 1; min-width: 200px; border-left: 1px solid #555; padding-left: 20px;">${rightHTML}</div>
-                </div>`;
-        } 
-        // 2. ҚАЛЫПТЫ ТИПТЕР (Single / Multiple)
-        else {
-            let optionsHTML = '';
-            // Options массивін қауіпсіз түрде алу
-            let options = [];
-            try {
-                options = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
-            } catch (e) {
-                options = q.options || [];
-            }
-
-            const inputType = q.type === 'multiple' ? 'checkbox' : 'radio';
-
-            options.forEach(opt => {
-                optionsHTML += `
-                    <label style="display:block; margin: 10px 0; cursor: pointer;">
-                        <input type="${inputType}" name="q${q.id}" value="${opt}" style="margin-right: 10px;">
-                        ${opt}
-                    </label>`;
-            });
-            div.innerHTML = `<h3>${index + 1}. ${q.question_test}</h3>${optionsHTML}`;
-        }
-
-        container.appendChild(div);
-    });
-}
-
+// --- СҰРАҚТАРДЫ ШЫҒАРУ (ТҮЗЕТІЛГЕН) ---
 async function getQuestions(variantId) {
     const container = document.getElementById('quiz-container');
     if (!container) return;
@@ -270,7 +182,6 @@ async function getQuestions(variantId) {
         .eq('variant', Number(variantId));
 
     if (error) {
-        console.error("Supabase қатесі:", error.message);
         container.innerHTML = `<p style="color: red;">Қате: ${error.message}</p>`;
         return;
     }
@@ -288,11 +199,8 @@ async function getQuestions(variantId) {
         div.style.cssText = "background: rgba(255,255,255,0.1); padding: 20px; margin-bottom: 15px; border-radius: 10px; color: white;";
 
         try {
-            // 1. СӘЙКЕСТЕНДІРУ ТИПІ (Matching)
             if (q.type === 'matching') {
-                let opts = q.options;
-                if (typeof opts === 'string') opts = JSON.parse(opts);
-
+                let opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
                 let leftHTML = '';
                 let rightHTML = '';
 
@@ -302,7 +210,7 @@ async function getQuestions(variantId) {
                         <div style="margin-bottom: 15px;">
                             <span style="background: #4a90e2; padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${label}</span> 
                             ${text}
-                            <select name="q${q.id}_${label}" style="margin-left: 10px; padding: 5px; color: black; border-radius: 5px; width: 65px;">
+                            <select name="q${q.id}_${label}" style="margin-left: 10px; color: black; border-radius: 5px;">
                                 <option value="">?</option>
                                 ${opts.right.map((_, j) => `<option value="${j+1}">${j+1}</option>`).join('')}
                             </select>
@@ -313,43 +221,78 @@ async function getQuestions(variantId) {
                     rightHTML += `<div style="margin-bottom: 10px;"><b>${j+1})</b> ${text}</div>`;
                 });
 
-                div.innerHTML = `
-                    <h3 style="margin-bottom:15px;">${index + 1}. Сәйкестендіріңіз</h3>
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                div.innerHTML = `<h3>${index + 1}. Сәйкестендіріңіз</h3>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top:10px;">
                         <div style="flex: 1; min-width: 200px;">${leftHTML}</div>
                         <div style="flex: 1; min-width: 200px; border-left: 1px solid #555; padding-left: 20px;">${rightHTML}</div>
                     </div>`;
-            } 
-            // 2. ҚАЛЫПТЫ ТИПТЕР (Single / Multiple)
-            else {
-                let optionsHTML = '';
-                let options = [];
-                
-                // options-ты өңдеу: егер string болса parse жасаймыз, әйтпесе сол күйінде аламыз
-                if (typeof q.options === 'string') {
-                    options = JSON.parse(q.options);
-                } else {
-                    options = q.options || [];
-                }
-
+            } else {
+                let options = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
                 const inputType = q.type === 'multiple' ? 'checkbox' : 'radio';
+                let optionsHTML = '';
 
                 options.forEach(opt => {
                     optionsHTML += `
-                        <label style="display:block; margin: 12px 0; cursor: pointer; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px;">
-                            <input type="${inputType}" name="q${q.id}" value="${opt}" style="margin-right: 10px; transform: scale(1.2);">
+                        <label style="display:block; margin: 10px 0; cursor: pointer;">
+                            <input type="${inputType}" name="q${q.id}" value="${opt}" style="margin-right: 10px;">
                             ${opt}
                         </label>`;
                 });
-                div.innerHTML = `<h3>${index + 1}. ${q.question_test || 'Сұрақ мәтіні бос'}</h3>${optionsHTML}`;
+                div.innerHTML = `<h3>${index + 1}. ${q.question_test || ''}</h3>${optionsHTML}`;
             }
-        } catch (err) {
-            console.error(`Қате шыққан сұрақ ID: ${q.id}`, err);
-            div.innerHTML = `<p style="color: #ffbaba;">⚠️ Сұрақты жүктеу қатесі (ID: ${q.id}). Базадағы форматты тексеріңіз.</p>`;
+        } catch (e) {
+            div.innerHTML = `<p style="color:orange;">Сұрақ ID ${q.id} форматында қате бар.</p>`;
         }
-
         container.appendChild(div);
     });
+}
+
+// --- ЖАУАПТАРДЫ ТЕКСЕРУ ---
+async function checkAnswers() {
+    const container = document.getElementById('quiz-container');
+    let totalScore = 0;
+    let maxScore = 0;
+    let reviewData = [];
+
+    const { data: questions } = await _supabase.from('questions').select('*').eq('variant', Number(currentVariantId));
+
+    questions.forEach((q, index) => {
+        let questionScore = 0;
+        let maxQScore = (index + 1 >= 31) ? 2 : 1; 
+        let userAns = "";
+        let correctAns = "";
+
+        if (q.type === 'matching') {
+            const correct = typeof q.correct_answer === 'string' ? JSON.parse(q.correct_answer) : q.correct_answer;
+            const userA = container.querySelector(`select[name="q${q.id}_А"]`)?.value;
+            const userB = container.querySelector(`select[name="q${q.id}_В"]`)?.value;
+            if (userA === String(correct.А)) questionScore++;
+            if (userB === String(correct.В)) questionScore++;
+            userAns = `А-${userA || '?'}, В-${userB || '?'}`;
+            correctAns = `А-${correct.А}, В-${correct.В}`;
+        } else {
+            const selected = Array.from(container.querySelectorAll(`input[name="q${q.id}"]:checked`)).map(i => i.value);
+            const correct = Array.isArray(q.correct_answer) ? q.correct_answer : JSON.parse(q.correct_answer || "[]");
+            
+            userAns = selected.join(', ') || 'Белгіленбеген';
+            correctAns = correct.join(', ');
+
+            // Балл есептеу логикасы (36-40 сұрақтар үшін 2 балл)
+            const rightCount = selected.filter(val => correct.includes(val)).length;
+            if (index < 30) {
+                if (rightCount === 1 && selected.length === 1) questionScore = 1;
+            } else {
+                if (rightCount === correct.length && selected.length === correct.length) questionScore = 2;
+                else if (rightCount >= 1 && selected.length <= correct.length + 1) questionScore = 1;
+            }
+        }
+
+        totalScore += questionScore;
+        maxScore += maxQScore;
+        reviewData.push({ question: q.question_test || "Сәйкестендіру", user: userAns, correct: correctAns, score: questionScore, max: maxQScore });
+    });
+
+    showDetailedResult(totalScore, maxScore, reviewData);
 }
 
 function showDetailedResult(score, total, review) {
