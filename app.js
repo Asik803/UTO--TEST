@@ -201,23 +201,59 @@ async function getQuestions(variantId) {
         div.style.borderRadius = "10px";
         div.style.color = "white";
 
-        let optionsHTML = '';
-        const options = q.options || [];
-        
-        // --- 3-ҚАДАМДАҒЫ ӨЗГЕРІС ОСЫ ЖЕРДЕ ---
-        // Егер сұрақ типі 'multiple' болса - квадрат (checkbox), әйтпесе - нүкте (radio)
-        const inputType = q.type === 'multiple' ? 'checkbox' : 'radio';
+        // 1. СӘЙКЕСТЕНДІРУ ТИПІ (Matching)
+        if (q.type === 'matching') {
+            const opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+            let leftHTML = '';
+            let rightHTML = '';
 
-        options.forEach(opt => {
-            optionsHTML += `
-                <label style="display:block; margin: 10px 0; cursor: pointer;">
-                    <input type="${inputType}" name="q${q.id}" value="${opt}" style="margin-right: 10px;">
-                    ${opt}
-                </label>`;
-        });
-        // -------------------------------------
+            opts.left.forEach((text, i) => {
+                const label = i === 0 ? 'А' : 'В';
+                leftHTML += `
+                    <div style="margin-bottom: 15px;">
+                        <span style="background: #4a90e2; padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${label}</span> 
+                        ${text}
+                        <select name="q${q.id}_${label}" style="margin-left: 10px; padding: 5px; color: black; border-radius: 5px; width: 60px;">
+                            <option value="">?</option>
+                            ${opts.right.map((_, j) => `<option value="${j+1}">${j+1}</option>`).join('')}
+                        </select>
+                    </div>`;
+            });
 
-        div.innerHTML = `<h3>${index + 1}. ${q.question_test}</h3>${optionsHTML}`;
+            opts.right.forEach((text, j) => {
+                rightHTML += `<div style="margin-bottom: 10px;"><b>${j+1})</b> ${text}</div>`;
+            });
+
+            div.innerHTML = `
+                <h3>${index + 1}. Сәйкестендіріңіз</h3>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
+                    <div style="flex: 1; min-width: 200px;">${leftHTML}</div>
+                    <div style="flex: 1; min-width: 200px; border-left: 1px solid #555; padding-left: 20px;">${rightHTML}</div>
+                </div>`;
+        } 
+        // 2. ҚАЛЫПТЫ ТИПТЕР (Single / Multiple)
+        else {
+            let optionsHTML = '';
+            // Options массивін қауіпсіз түрде алу
+            let options = [];
+            try {
+                options = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
+            } catch (e) {
+                options = q.options || [];
+            }
+
+            const inputType = q.type === 'multiple' ? 'checkbox' : 'radio';
+
+            options.forEach(opt => {
+                optionsHTML += `
+                    <label style="display:block; margin: 10px 0; cursor: pointer;">
+                        <input type="${inputType}" name="q${q.id}" value="${opt}" style="margin-right: 10px;">
+                        ${opt}
+                    </label>`;
+            });
+            div.innerHTML = `<h3>${index + 1}. ${q.question_test}</h3>${optionsHTML}`;
+        }
+
         container.appendChild(div);
     });
 }
